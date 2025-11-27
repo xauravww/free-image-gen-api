@@ -130,6 +130,10 @@ export async function generateImage(prompt, model = 'ideogram-v3-quality') {
       throw new Error(`Failed to click submit button after ${maxSubmitAttempts} attempts`);
     }
 
+    // Take screenshot before submission
+    await page.screenshot({ path: 'before_submit.png', fullPage: true });
+    console.log(`📸 Screenshot saved: before_submit.png`);
+
     // Handle Terms of Use modal
     console.log(`🔍 Checking for Terms of Use modal...`);
     try {
@@ -212,33 +216,74 @@ export async function generateImage(prompt, model = 'ideogram-v3-quality') {
       console.log(`   ℹ️  No modal detected, continuing...`);
     }
 
+    // Take screenshot after modal handling
+    await page.screenshot({ path: 'after_modal.png', fullPage: true });
+    console.log(`📸 Screenshot saved: after_modal.png`);
+
     console.log(`✅ Image generation request submitted!`);
+
+    // Take screenshot after submission
+    await page.screenshot({ path: 'after_submit.png', fullPage: true });
+    console.log(`📸 Screenshot saved: after_submit.png`);
+
+    // Check if we were redirected to login or error page
+    const currentUrl = page.url();
+    console.log(`📍 Current URL after submit: ${currentUrl}`);
+
+    if (currentUrl.includes('login') || currentUrl.includes('signin')) {
+      throw new Error('Redirected to login page - authentication required');
+    }
 
     // Wait for image generation to complete
     console.log(`⏳ Waiting for image generation to complete...`);
 
     let imageUrl = null;
     let waitAttempts = 0;
-    const maxWaitAttempts = 60;
+    const maxWaitAttempts = 120; // Increased timeout
 
     while (!imageUrl && waitAttempts < maxWaitAttempts) {
       waitAttempts++;
-      console.log(`   🔍 Checking for generated image (attempt ${waitAttempts}/60)...`);
+      console.log(`   🔍 Checking for generated image (attempt ${waitAttempts}/120)...`);
 
       try {
-        // Look for the generated image
-        const imageElement = await page.$('img[data-sentry-source-file="message-attachment.tsx"]');
+        // Try multiple selectors for the generated image
+        let imageElement = await page.$('img[data-sentry-source-file="message-attachment.tsx"]');
+
+        // If not found, try other common selectors
+        if (!imageElement) {
+          imageElement = await page.$('img[src*="cloudflarestorage.com"]');
+        }
+        if (!imageElement) {
+          imageElement = await page.$('img[alt*="generated"]');
+        }
+        if (!imageElement) {
+          // Look for any image that appeared recently
+          const images = await page.$$('img');
+          for (const img of images) {
+            const src = await page.evaluate(el => el.getAttribute('src'), img);
+            if (src && (src.includes('cloudflarestorage.com') || src.includes('blob:') || src.includes('data:image'))) {
+              imageElement = img;
+              break;
+            }
+          }
+        }
 
         if (imageElement) {
           imageUrl = await page.evaluate(el => el.getAttribute('src'), imageElement);
-          if (imageUrl && imageUrl.includes('cloudflarestorage.com')) {
+          if (imageUrl && (imageUrl.includes('cloudflarestorage.com') || imageUrl.includes('blob:') || imageUrl.includes('data:image'))) {
             console.log(`\n🎉 Image generation completed!`);
             console.log(`🖼️  Image URL: ${imageUrl}`);
             break;
           }
         }
 
-        // Wait 1 second before checking again (reduced)
+        // Take a screenshot every 30 attempts for debugging
+        if (waitAttempts % 30 === 0) {
+          await page.screenshot({ path: `debug_attempt_${waitAttempts}.png`, fullPage: true });
+          console.log(`📸 Debug screenshot saved: debug_attempt_${waitAttempts}.png`);
+        }
+
+        // Wait 1 second before checking again
         await new Promise(resolve => setTimeout(resolve, 1000));
 
       } catch (error) {
