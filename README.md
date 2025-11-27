@@ -2,6 +2,10 @@
 
 This project contains API testing scripts and an image generation API for lmarena.ai.
 
+## ⚠️ Disclaimer
+
+See [DISCLAIMER.md](DISCLAIMER.md) for important usage information.
+
 ## 🖼️ Image Generation API
 
 A Node.js API for generating images using LM Arena's image generation models. Built with Express, Puppeteer-Real-Browser, and a queue system for handling requests.
