@@ -13,8 +13,10 @@ export async function generateImage(prompt, model = 'ideogram-v3-quality') {
   ];
   const randomUA = userAgents[Math.floor(Math.random() * userAgents.length)];
 
+  // Detect Render.com and use headless mode
+  const isRender = !!process.env.RENDER;
   const { browser, page } = await connect({
-    headless: false,
+    headless: isRender,  // true on Render.com for compatibility
     defaultViewport: {
       width: 1280,
       height: 1024
@@ -22,7 +24,7 @@ export async function generateImage(prompt, model = 'ideogram-v3-quality') {
     userAgent: randomUA,
     recaptcha: true,
     turnstile: true,
-    disableXvfb: false
+    disableXvfb: isRender  // true on Render.com to avoid Xvfb issues
   });
 
   try {
