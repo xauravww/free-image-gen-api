@@ -130,9 +130,7 @@ export async function generateImage(prompt, model = 'ideogram-v3-quality') {
       throw new Error(`Failed to click submit button after ${maxSubmitAttempts} attempts`);
     }
 
-    // Take screenshot before submission
-    await page.screenshot({ path: 'before_submit.png', fullPage: true });
-    console.log(`📸 Screenshot saved: before_submit.png`);
+
 
     // Handle Terms of Use modal
     console.log(`🔍 Checking for Terms of Use modal...`);
@@ -140,16 +138,14 @@ export async function generateImage(prompt, model = 'ideogram-v3-quality') {
       const modal = await page.waitForSelector('div[role="dialog"]', { timeout: 5000 }); // Reduced
       if (modal) {
         console.log(`📋 Terms of Use modal detected - reading terms...`);
-        // Take screenshot for debugging
-        await page.screenshot({ path: 'modal_detected.png', fullPage: true });
-        console.log(`📸 Screenshot saved: modal_detected.png`);
+
         // Human-like delay to "read" the terms (reduced)
         await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
 
         // Try to click Agree button
         let agreeClicked = false;
         let attempts = 0;
-        const maxAttempts = 10; // Increased
+        const maxAttempts = 100; // Increased
 
         while (!agreeClicked && attempts < maxAttempts) {
           attempts++;
@@ -216,15 +212,11 @@ export async function generateImage(prompt, model = 'ideogram-v3-quality') {
       console.log(`   ℹ️  No modal detected, continuing...`);
     }
 
-    // Take screenshot after modal handling
-    await page.screenshot({ path: 'after_modal.png', fullPage: true });
-    console.log(`📸 Screenshot saved: after_modal.png`);
+
 
     console.log(`✅ Image generation request submitted!`);
 
-    // Take screenshot after submission
-    await page.screenshot({ path: 'after_submit.png', fullPage: true });
-    console.log(`📸 Screenshot saved: after_submit.png`);
+
 
     // Check if we were redirected to login or error page
     const currentUrl = page.url();
@@ -277,11 +269,7 @@ export async function generateImage(prompt, model = 'ideogram-v3-quality') {
           }
         }
 
-        // Take a screenshot every 30 attempts for debugging
-        if (waitAttempts % 30 === 0) {
-          await page.screenshot({ path: `debug_attempt_${waitAttempts}.png`, fullPage: true });
-          console.log(`📸 Debug screenshot saved: debug_attempt_${waitAttempts}.png`);
-        }
+
 
         // Wait 1 second before checking again
         await new Promise(resolve => setTimeout(resolve, 1000));
