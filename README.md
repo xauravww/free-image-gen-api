@@ -35,6 +35,23 @@ A Node.js API for generating images using LM Arena's image generation models. Bu
    curl http://localhost:3000/health
    ```
 
+## Environment Variables
+
+The application supports the following environment variables:
+
+- `NODE_ENV`: Set to `production` for headless browser mode (required for Render.com). Defaults to development mode.
+- `RENDER`: Automatically set by Render.com (used for environment detection). Do not set manually.
+- `DISPLAY`: Optional; set to `:99` or similar if using Xvfb locally. Not needed on Render.com.
+
+### For Local Development
+- Run with `NODE_ENV=development` (or unset) for non-headless mode with display.
+- Install Xvfb if needed: `sudo apt-get install xvfb` (Linux/Mac).
+
+### For Render.com Deployment
+- Set `NODE_ENV=production` in Render.com environment variables.
+- Ensure Dockerfile includes Xvfb for virtual display support.
+- Monitor logs for browser launch issues.
+
 ### API Endpoints
 
 #### POST /generate
@@ -186,7 +203,8 @@ The API supports the following models available on LM Arena:
 To run locally without Docker:
 
 1. Install dependencies: `npm install`
-2. Run the server: `node server.js`
+2. Copy `.env.example` to `.env` and configure environment variables
+3. Run the server: `node server.js`
 
 Make sure you have the necessary system dependencies for Puppeteer and Xvfb.
 
